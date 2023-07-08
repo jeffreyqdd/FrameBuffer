@@ -47,7 +47,7 @@ extern "C" {
 #define BUFFER_COUNT 3
 
 // where to store the buffer
-#define BLOCK_DIR "/dev/shm/bufferd-"
+#define BLOCK_DIR "/dev/shm/buffer-"
 
 // A frame is a long array of characters. Each character is 1 byte, which perfectly represents
 // a pixel value [0,255].
