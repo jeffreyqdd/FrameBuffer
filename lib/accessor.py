@@ -106,10 +106,15 @@ class NoFrameError(Exception):
 
 class BufferedFrameWriter:
     def __init__(self, name: str):
+        """Creates a frame buffer accessible by `name`
+        """
         self.name = name
         self._block = None
 
     def write_frame(self, frame: np.ndarray, acq_time: np.uint64):
+        """Writes `frame` to the frame buffer. `act_time` is the 
+        time in milliseconds when `frame` was acquired.
+        """
         width = height = depth = 1
         if len(frame.shape) == 1:
             width = frame.shape[0]
@@ -141,12 +146,15 @@ class BufferedFrameWriter:
             print("Block is not active.")
 
     def __del__(self):
+        # free memory to prevent memory leaks
         if self._block != None:
             _lib.destroy_block(self._block)
 
 
 class BufferedFrameReader:
     def __init__(self, name: str):
+        """Attempts to open the buffer called `name`
+        """
         self.name = name
         self._frame = self._setup_accessor_frame()
         self._last_python_frame = None
@@ -170,6 +178,13 @@ class BufferedFrameReader:
         return frame
 
     def get_next_frame(self, wait_for_frame=True):
+        """ Returns a pair. The first value is the frame data. The second value
+        is the time that frame was acquired. 
+
+        This function blocks when `wait_for_frame` is True. If `wait_for_frame`
+        is set to False, and there is no new frame ready in the buffer, 
+        this function returns `None`
+        """
         curr_frame = self._frame
 
         exit_code = _lib.read_frame(
@@ -194,13 +209,16 @@ class BufferedFrameReader:
         return self._last_python_frame
 
     def has_last_frame(self):
+        """Returns `True` if `get_next_frame()` successfully terminated once."""
         return self._last_python_frame is not None
 
     def get_last_frame(self):
+        """Returns the last `(frame, acq_time)` pair that was read."""
         if self._last_python_frame is None:
             raise NoFrameError()
         return self._last_python_frame
 
     def __del__(self):
+        # free memory to prevent memory leaks
         if self._block != None:
             _lib.close_block(self._block)
